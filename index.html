@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        .chart-container {
+            max-width: 1050px;
+            border: 3px hidden red;
+            margin: 0 auto;
+            /* auto centers the div */
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+
+        svg {
+            border: 2px hidden purple;
+            overflow: visible;
+        }
+
+
+        h1 {
+            border: 2px hidden green;
+            text-align: center;
+        }
+
+        .pop-up {
+            position: absolute;
+            border: 1px solid black;
+            border-radius: 1px;
+            line-height: 1.2;
+            width: 200px;
+            pointer-events: none;
+            background-color: white;
+            padding: 10px;
+        }
+
+        .annotation {
+            font-size: small;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-style: italic;
+            font-weight: 200;
+        }
+
+    </style>
+    <!-- add your script blocks at the end -->
+
+</head>
+
+<body>
+    <div class="chart-container">
+        <h1 class="headline">
+            College Completion Rates, 2015-2019
+        </h1>
+
+        <svg width="1050px" height="500px">
+
+        </svg>
+
+        <div class="pop-up">
+        </div>
+
+    </div>
+</body>
+
+
+<!-- we're using d3 version 6 (the latest version) for all out work -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<!-- load topojson script -->
+<script src="https://unpkg.com/topojson@3"></script>
+
+<script>
+    console.log({ d3 })
+    console.log({ topojson })
+
+    // //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+    Promise.all([ //waits for all the data to load, then when loaded will return it all in one array called res
+        d3.json('county-hw8.json'),
+    ])
+        .then(ready)
+        .catch((err) => {
+            console.log(err);
+        });
+
+    function ready(res) {
+        console.log(res[0])
+        let raw = res[0]
+
+        let county = topojson.feature(raw, raw.objects.county);
+        let state = topojson.feature(raw, raw.objects.state);
+
+        let width = 1050;
+        let height = 500;
+
+        console.log(county, state)
+
+        let svg = d3.select("body").select("svg")
+
+        let myProjection = d3.geoAlbersUsa()
+            .fitSize([width, height], county)
+
+        //path function
+        let path = d3.geoPath()
+            .projection(myProjection)
+
+        let innerlines = topojson.mesh(raw, raw.objects.state, function (a, b) {
+            return a != b;
+        });
+
+        let r = d3.scaleSqrt()
+            .domain([0, 2.241079e6])
+            .range([1, 50]);
+
+        svg
+            .selectAll(".states")
+            .data(state.features)
+            .join("path")
+            .attr("d", path)
+            .style("fill", "#eee")
+            .style("stroke", "none")
+            .style("pointer-events", "none")
+
+        let states = svg
+            .append("path")
+            .attr("d", path(innerlines))
+            .style("fill", "none")
+            .style("stroke", "#fff")
+            .style("stroke-width", 1)
+            .style("pointer-events", "none")
+
+        let popup = d3.select(".pop-up");
+
+
+        let points = svg
+            .selectAll(".counties")
+            // .data(county.features)
+            .data(county.features.filter(d => d.geometry != null).sort((a, b) => d3.descending(a.properties.ed_19, b.ed_19)))
+            .join("circle")
+            .attr("class", function (d) { return "circles p-" + d.properties.GEOID })
+            .attr("r", 3)
+            .attr("cx", d => {
+                return path.centroid(d)[0]
+            })
+            .attr("cy", d => {
+                return path.centroid(d)[1]
+            })
+            .style("fill", "green")
+            .style("stroke", "#ccc")
+            .style("stroke-width", .5)
+            .style("opacity", .25)
+
+        points.on("mouseover", (event, d) => {
+            console.log(event)
+            console.log(d)
+
+            points
+                .style("stroke", "#ccc")
+                .style("stroke-width", .5)
+                .style("fill", "green")
+                .style("opacity", .25)
+
+            svg.select(".p-" + d.properties.GEOID)
+                .style("stroke", "black")
+                .style("stroke-width", 1)
+                .style("fill", "#f5851f")
+                .style("opacity", 2)
+                .raise()
+
+            let lang = "There are [x] college graduates in " + d.properties.NAMELSAD + ", [state]."
+
+            console.log(lang)
+
+            popup
+                .style("opacity", .75)
+                .style("left", (event.x - 115) + "px")
+                .style("top", (event.y + 15) + "px")
+                .html(lang)
+
+
+        })
+
+    }
+
+
+
+
+
+
+
+
+</script>
