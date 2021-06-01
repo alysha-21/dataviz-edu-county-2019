@@ -42,8 +42,9 @@
         }
 
         .source {
-            max-width: 1000px;
+            max-width: 950px;
             margin: 0 auto;
+            font-size: x-small;
         }
 
     </style>
@@ -58,7 +59,6 @@
         </h1>
 
         <svg width="1050px" height="500px">
-
         </svg>
 
         <div class="pop-up">
@@ -181,7 +181,7 @@
             popup
                 .style("opacity", .75)
                 .style("left", (event.x - 115) + "px")
-                .style("top", (event.y + 15) + "px")
+                .style("top", (event.y - 100) + "px")
                 .html(lang)
 
 
