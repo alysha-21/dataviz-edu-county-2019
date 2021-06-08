@@ -83,7 +83,7 @@
 
     // //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
     Promise.all([ //waits for all the data to load, then when loaded will return it all in one array called res
-        d3.json('county-hw8.json'),
+        d3.json('county_final.json'),
     ])
         .then(ready)
         .catch((err) => {
@@ -116,6 +116,7 @@
         });
 
         let r = d3.scaleSqrt()
+            // .domain([0, d3.max(county, function (d) { return d.properties.Bachelors_degree_or_higher_2015_to_2019; })])
             .domain([0, 2.241079e6])
             .range([1, 50]);
 
@@ -145,7 +146,8 @@
             .data(county.features.filter(d => d.geometry != null).sort((a, b) => d3.descending(a.properties.ed_19, b.ed_19)))
             .join("circle")
             .attr("class", function (d) { return "circles p-" + d.properties.GEOID })
-            .attr("r", 3)
+            // .attr("r", 3)
+            .attr("r", function (d) { return r(d.properties.Bachelors_degree_or_higher_2015_to_2019) })
             .attr("cx", d => {
                 return path.centroid(d)[0]
             })
@@ -174,7 +176,7 @@
                 .style("opacity", 2)
                 .raise()
 
-            let lang = "There are [x] college graduates in " + d.properties.NAMELSAD + ", [state]."
+            let lang = "There were " + d.properties.Bachelors_degree_or_higher_2015_to_2019 + " college graduates in " + d.properties.NAMELSAD + ", " + d.properties.State + " between 2015 and 2019."
 
             console.log(lang)
 
